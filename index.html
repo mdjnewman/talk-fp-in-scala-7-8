@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
 
-        <title>FP in Scala - Chapters 7 & 8</title>
+        <title>FP in Scala - Chapters 7 &amp; 8</title>
 
         <meta name="author" content="Matt Newman">
 
@@ -39,6 +39,63 @@
 
             <!-- Any section element inside of this container is displayed as a slide -->
             <div class="slides">
+
+                <section data-markdown>
+                    <script type="text/template">
+                        FP in Scala
+                        ===========
+
+                        Chapters 7 & 8
+                        --------------
+
+                        ### Purely functional parallelism & Property-based testing
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## Why purely functional parallelism?
+
+                        * Modern computers have multiple cores/multiple CPUs
+                        * Shared mutable memory remains hard
+                            * Race conditions
+                            * Deadlocks
+                            * Testing is difficult
+                        * We want to be able to use the substitution model and reason about
+                          our code, *by separating the concern of
+                          describing a computation from actually running it.*
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                        ## A data type for parallel computations
+
+                        First, a container type for our results:
+
+                        ```scala
+                        Par[A]
+                        ```
+
+                        Second, a function to create a 'unit' of parallelism:
+
+                        ```scala
+                        def unit[A](a: => A): Par[A]
+                        ```
+
+                        Third, a method to extract the value from a parallel computation:
+
+                        ```scala
+                        def get[A](a: Par[A]): A
+                        ```
+
+                    </script>
+                </section>
+
+                <section data-markdown>
+                    <script type="text/template">
+                    </script>
+                </section>
 
             </div>
 
