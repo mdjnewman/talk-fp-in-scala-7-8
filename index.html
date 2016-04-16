@@ -42,14 +42,46 @@
 
                 <section data-markdown>
                     <script type="text/template">
-                        FP in Scala
-                        ===========
+                        # FP in Scala
 
-                        Chapters 7 & 8
-                        --------------
+                        ### Chapters 7 & 8
 
-                        ### Purely functional parallelism & Property-based testing
+                        Purely functional parallelism & Property-based testing
                     </script>
+                </section>
+
+                <section>
+                    <section>
+                        <h2>Prelude</h2>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Part 1: Fundamentals
+
+                            - What is functional programming?
+                            - Getting started with FP in Scala
+                            - Functional data structures
+                            - Handling errors without exceptions
+                            - Strictness and laziness
+                            - Purely functional state
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Part 2: Functional design and combinator libraries
+
+                            - Purely functional parallelism
+                            - Property-based testing
+                            - Parser combinators
+
+                            > These chapters should be like peering over the shoulder of
+                            > someone as they think through possible designs.
+
+                            Note:
+                            These chapters look at the impact the fundamentals in Part 1 have
+                            on library design, by way of three examples
+                        </script>
+                    </section>
                 </section>
 
                 <section data-markdown>
@@ -67,34 +99,172 @@
                     </script>
                 </section>
 
-                <section data-markdown>
-                    <script type="text/template">
-                        ## A data type for parallel computations
+                <section>
+                    <section>
+                        <h2>A motivating example</h2>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Summing a list of integers:
 
-                        First, a container type for our results:
+                            ```scala
+                            def sum(ints: Seq[Int]): Int =
+                                ints.foldLeft(0)((a,b) => a + b)
+                            ```
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Same operation, using a divide-and-conquer algorithm:
 
-                        ```scala
-                        Par[A]
-                        ```
+                            ```scala
+                            def sum(ints: IndexedSeq[Int]): Int =
+                                if (ints.size <= 1)
+                                    ints.headOption getOrElse 0
+                                else {
+                                    val (l,r) = ints.splitAt(ints.length / 2)
+                                    sum(l) + sum(r)
+                                }
+                            ```
 
-                        Second, a function to create a 'unit' of parallelism:
+                            (this implementation can be parallelised)
 
-                        ```scala
-                        def unit[A](a: => A): Par[A]
-                        ```
+                            Note:
+                            Summing integers is probably so fast that the overhead of parallelisation is
+                            probably greater than the improvement from running in parallel.
 
-                        Third, a method to extract the value from a parallel computation:
-
-                        ```scala
-                        def get[A](a: Par[A]): A
-                        ```
-
-                    </script>
+                            However, we don't care about the operation - we want to build a simple
+                            and composable set of core data types and functions for parallelism.
+                        </script>
+                    </section>
                 </section>
 
-                <section data-markdown>
-                    <script type="text/template">
-                    </script>
+                <section>
+                    <section>
+                        <h2>Choosing data types and functions</h2>
+                    </section>
+                </section>
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### An initial data type for parallel computations
+
+                            First, a container type for our results:
+
+                            ```scala
+                            Par[A]
+                            ```
+
+                            Second, a function to create a 'unit' of parallelism:
+
+                            ```scala
+                            def unit[A](a: => A): Par[A]
+                            ```
+
+                            Third, a method to extract the value from a parallel computation:
+
+                            ```scala
+                            def get[A](a: Par[A]): A
+                            ```
+
+                            Note:
+                            For now, we don't need to worry about what other functions we require,
+                            or internal representation of `Par`.
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Let's change our `sum` example to use this API:
+
+                            ```scala
+                            def sum(ints: IndexedSeq[Int]): Int =
+                                if (ints.size <= 1)
+                                    ints headOption getOrElse 0
+                                else {
+                                    val (l,r) = ints.splitAt(ints.length/2)
+                                    val sumL: Par[Int] = Par.unit(sum(l))
+                                    val sumR: Par[Int] = Par.unit(sum(r))
+                                    Par.get(sumL) + Par.get(sumR)
+                                }
+                            ```
+
+                            Should `unit` start evaluating its argument immediately, or wait?
+
+                            Note:
+                            - In this example, `unit` must start evaluating immediately to get any parallelism
+                                - Because if we wait until `get` is called, we will spawn the computation
+                                  and wait for it immediately, before starting the second computation
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Is
+
+                            ```scala
+                            val sumL: Par[Int] = Par.unit(sum(l))
+                            val sumR: Par[Int] = Par.unit(sum(r))
+                            Par.get(sumL) + Par.get(sumR)
+                            ```
+
+                            equivalent to
+
+                            ```scala
+                            Par.get(Par.unit(sum(l))) + Par.get(Par.unit(sum(r)))
+                            ```
+
+                            ?
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            If `unit` begins evaluating its argument concurrently, then
+                            calling `get` arguably breaks _referential transparency_, as our
+                            program is no longer parallel
+
+                            ... and we've lost.
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Referential transparency (a.k.a. the goal)
+
+                            An expression `e` is referentially transparent if, for all programs
+                            `p`, all occurrences of `e` in `p` can be replaced by the result of
+                            evaluating `e` without affecting the meaning of `p`.
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            It's becoming clear that we need to combine asynchronous computations without
+                            waiting for them to finish...
+
+                            Note:
+                            We have:
+                            - Conjoured up a simple example
+                            - Explored it to uncover a design choice
+                            - Experimented and learned something fundamental about our domain
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h3>Combining parallel computations</h3>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section>
+                        <h3></h3>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                        </script>
+                    </section>
                 </section>
 
             </div>
