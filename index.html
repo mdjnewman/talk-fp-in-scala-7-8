@@ -687,7 +687,7 @@
                 <section>
                     <section data-markdown>
                         <script type="text/template">
-                            ### Fully non-blocking implementation using Actors
+                            ## Fully non-blocking implementation using Actors
                         </script>
                     </section>
                     <section data-markdown>
@@ -700,11 +700,74 @@
                 <section>
                     <section data-markdown>
                         <script type="text/template">
-                            ### Refining combinators to their most general form
+                            ## Refining combinators to their most general form
+
+                            Note:
+                            Functional design is an iterative process, when using an API
+                            you might find some new combinator that you need.
+
+                            Sometimes this combinator is just a special form of a more
+                            general combinator.
                         </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
+                            ### Choosing between computations
+
+                            Given a computation, use it to choose another:
+
+                            ```scala
+                            def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A]
+                            ```
+
+                            We can make this more general by allowing `n` alternatives:
+
+                            ```scala
+                            def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A]
+                            ```
+
+                            But why require a list of alternatives?
+
+                            ```scala
+                            def chooser[A,B](pa: Par[A])(choices: A => Par[B]): Par[B]
+                            ```
+
+                            Note:
+                            Why restrict the caller to just two alternatives?
+
+                            The type signature of `chooser` may look familiar to functions we've
+                            seen in the earlier sections...
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ```scala
+                            def chooser[A,B](pa: Par[A])(choices: A => Par[B]): Par[B]
+                            def flatMap[A,B](fa:   F[A])(   f   : A =>   F[B]):   F[B]
+                            ```
+
+                            Note:
+                            `flatMap` is a very general function that we will look into later
+
+                            We could try to take this process of generalistion further, but
+                            by now you probably get the point - before implementing a specific
+                            combinator, look to see if it's actually a specific case of a more
+                            general combinator that could be reused elsewhere.
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## Further reading
+
+                            - [Functional Programming in Scala
+                              ](https://www.manning.com/books/functional-programming-in-scala)
+                              (obviously)
+                            - [Parallel and Concurrent Programming in Haskell
+                              ](http://chimera.labs.oreilly.com/books/1230000000929/index.html),
+                              if you're interested in this domain specifically (it's free online)
                         </script>
                     </section>
                 </section>
@@ -713,6 +776,13 @@
                     <section>
                         <h1>Property based testing</h1>
                         <h3>(Chapter 8)</h3>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                        </script>
                     </section>
                 </section>
 
