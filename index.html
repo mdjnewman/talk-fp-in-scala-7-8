@@ -108,8 +108,14 @@
                 </section>
 
                 <section>
-                    <section>
-                        <h2>A motivating example</h2>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## A motivating example
+
+                            Note:
+                            To start with, let's look at an example that we can refer back to
+                            in order to make things a little more concrete.
+                        </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
@@ -438,9 +444,6 @@
                             // Mark a computation to be executed for concurrent evaluation
                             def fork[A](a: => Par[A]): Par[A]
 
-                            // Wraps the expression a for concurrent evaluation
-                            def lazyUnit[A](a: => A): Par[A] = fork(unit(a))
-
                             // Fully evaluate a given Par, spawing parallel computations
                             // as requested by fork
                             def run[A](a: Par[A]): A
@@ -632,6 +635,10 @@
                             `f` is `id`, which leads us to a simpler law that doesn't mention
                             `unit` at all.
 
+                            Laws like these are very handy when reasoning about your code
+                            and when testing it using property based testing, as we will see
+                            in the enxt chapter.
+
                             Mention parametricity?
                         </script>
                     </section>
@@ -649,7 +656,9 @@
 
                             Note:
                             We’re expecting that `fork(x) == x` for all choices of `x`, and
-                            any choice of ExecutorService
+                            any choice of ExecutorService.
+
+                            Some ExecutorServices are backed by a fixed size thread pool...
                         </script>
                     </section>
                     <section data-markdown>
