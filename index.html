@@ -320,6 +320,7 @@
                             Par.map2(Par.unit(1), Par.unit(1))(_ + _)
                             ```
 
+                            Note:
                             With our current API, there is no way for the caller to say whether
                             a computation should be forked onto a separate thread.
                         </script>
@@ -446,13 +447,14 @@
                             ```
 
                             Note:
-                            Currently we're just assuming that `run` has some way of implementing
-                            parallelism.
+                            So far we've just been assuming that `run` has some way of implementing
+                            parallelism. Let's dig into that a bit more...
                         </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
-                            Can we use the java.util.ExecutorService?
+                            Can `run` implement parallelism using a `java.util.ExecutorService`?
+
                             ```scala
                             class ExecutorService {
                                 def submit[A](a: Callable[A]): Future[A]
@@ -469,15 +471,14 @@
                             }
                             ```
 
-                            Can `run` implement parallelism using an `ExecutorService`?
-
                             Note:
                             This is the Java API transcribed to Scala.
                         </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
-                            For now, let's assume so:
+                            For now, let's assume an `ExecutorService` is appropriate:
+
                             ```scala
                             def run[A](s: ExecutorService)(a: Par[A]): A
                             ```
@@ -534,8 +535,8 @@
 
                             Note:
                             - `UnitFuture` just wraps a constant value
-                            - `map2` doesn't evaluate `f` in a separate logical thread, wrap it
-                              in fork if you want that
+                            - `map2` doesn't evaluate `f` in a separate logical thread, caller can
+                              wrap it in `fork` if they want that
                             - To support timeouts in `map2`, we'd need a new implementation of `Future`
                               that keeps track of the amount of time spend evaluating `af`
                         </script>
