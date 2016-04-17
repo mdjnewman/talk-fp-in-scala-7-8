@@ -351,7 +351,7 @@
                             needs to be forked onto a separate thread:
 
                             This solves the problem of instantiating our
-                            parallel computations too strictly, but more fundamentally 
+                            parallel computations too strictly, but more fundamentally
                         </script>
                     </section>
                     <section data-markdown>
@@ -590,7 +590,108 @@
                 <section>
                     <section data-markdown>
                         <script type="text/template">
-                            ## The algebra of an API
+                            ## Laws for our API
+
+                            Note:
+                            Time to step back from blindly following the types and formalize
+                            the laws that we expect to hold
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### The law of mapping
+
+                            A concrete example:
+                            ```scala
+                            map(unit(1))(_ + 1) == unit(2)
+                            ```
+
+                            or more generally:
+
+                            ```scala
+                            map(unit(x))(f) == unit(f(x))
+                            ```
+
+                            and when `f` is `id`:
+
+                            ```scala
+                            map(unit(x))(id) == unit(id(x))
+                            map(unit(x))(id) == unit(x)
+                            map(   y   )(id) == y
+                            ```
+
+                            Note:
+                            Here we are saying this should hold for _any_ choice of `f` and `x`, which places
+                            some useful constraints:
+
+                            - Our implementation of `unit` can't inspect the provided values and
+                              behave differently depending on input
+                                - So no downcasting or `isInstanceOf` checks
+
+                            Given these constraints, we can reason about what happens when
+                            `f` is `id`, which leads us to a simpler law that doesn't mention
+                            `unit` at all.
+
+                            Mention parametricity?
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### The law of forking
+
+                            `fork` should not affect the result of a parallel computation:
+
+                            ```scala
+                            fork(x) == x
+                            ```
+
+                            This places strong constraints on our implementation.
+
+                            Note:
+                            We’re expecting that `fork(x) == x` for all choices of `x`, and
+                            any choice of ExecutorService
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            #### A subtle bug
+
+                            ```scala
+                            val a = lazyUnit(42 + 1)
+                            val S = Executors.newFixedThreadPool(1)
+                            println(Par.equal(S)(a, fork(a)))
+                            ```
+
+                            Note:
+                            Remember earlier, the issue with our implementation of `fork`?
+
+                            We’re submitting the Callable first, and within that Callable,
+                            we’re submitting another Callable to the ExecutorService and
+                            blocking on its result
+
+                            There is no way to fix this - we need a different representation
+                            for `Par`.
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Fully non-blocking implementation using Actors
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Homework time!
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Refining combinators to their most general form
                         </script>
                     </section>
                     <section data-markdown>
