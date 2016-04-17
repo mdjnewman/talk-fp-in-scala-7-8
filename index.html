@@ -201,8 +201,9 @@
 
                             Note:
                             - In this example, `unit` must start evaluating immediately to get any parallelism
-                                - Because if we wait until `get` is called, we will spawn the computation
-                                  and wait for it immediately, before starting the second computation
+                                - Because if we wait until `get` is called while evaluating the first argument
+                                  to our `+` function, we will spawn the computation and wait for it
+                                  immediately, before starting the second computation
                         </script>
                     </section>
                     <section data-markdown>
@@ -233,6 +234,7 @@
                             ... and we've lost.
                         </script>
                     </section>
+                    <!--
                     <section data-markdown>
                         <script type="text/template">
                             ### Referential transparency (a.k.a. the holy grail)
@@ -242,12 +244,17 @@
                             evaluating `e` without affecting the meaning of `p`.
                         </script>
                     </section>
+                    -->
                     <section data-markdown>
                         <script type="text/template">
                             It's becoming clear that we need to combine asynchronous computations without
                             waiting for them to finish...
 
                             Note:
+                            So if `unit` doesn't start evaluation of a parallel computation immediately,
+                            but we want to compute the sums of the two sublists in parallel, then we
+                            need some way to combine two parallel computations to create a third.
+
                             We have:
                             - Conjoured up a simple example
                             - Explored it to uncover a design choice
@@ -261,6 +268,14 @@
                         <script type="text/template">
                             ### Combining parallel computations
 
+                            Imagine a function `map2`, defined as:
+
+                            ```scala
+                            def map2[A,B,C](a: Par[A], b: Par[B])(f: (A,B) => C): Par[C]
+                            ```
+
+                            We can use this in our example:
+
                             ```scala
                             def sum(ints: IndexedSeq[Int]): Par[Int] =
                                 if (ints.size <= 1)
@@ -271,12 +286,14 @@
                                 }
                             ```
 
-                            where `Par.map2` is defined as:
-
-                            ```scala
-                            def map2[A,B,C](a: Par[A], b: Par[B])(f: (A,B) => C): Par[C]
-                            ```
-
+                            Note:
+                            So we're now no longer calling `unit` or `get` in our recursive case,
+                            and `map2` is free to start evaluating both its arguments in parallel.
+                        </script>
+                    </section>
+                    <!--
+                    <section data-markdown>
+                        <script type="text/template">
                             Now, should `map2` take its arguments lazily?
 
                             Note:
@@ -287,6 +304,7 @@
                             sides in parallel.
                         </script>
                     </section>
+                    -->
                 </section>
 
                 <section>
@@ -302,15 +320,13 @@
                             Par.map2(Par.unit(1), Par.unit(1))(_ + _)
                             ```
 
-                            With out current API, there is no way for the caller to say whether
+                            With our current API, there is no way for the caller to say whether
                             a computation should be forked onto a separate thread.
                         </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
-                            Let's introduce a new primitive for the caller to specify if a computation
-                            needs to be forked onto a separate thread:
-
+                            Introducing `fork`:
                             ```scala
                             def fork[A](a: => Par[A]): Par[A]
                             ```
@@ -327,11 +343,14 @@
                                 }
                             ```
 
-                            This solves the problem of instantiating our
-                            parallel computations too strictly, but more fundamentally _it
-                            puts the parallelism explicitly under programmer control_.
+                            We've put the parallelism explicitly under programmer control, no arbitrary decision making here!
 
-                            No arbitrary decision making here!
+                            Note:
+                            Let's introduce a new primitive for the caller to specify if a computation
+                            needs to be forked onto a separate thread:
+
+                            This solves the problem of instantiating our
+                            parallel computations too strictly, but more fundamentally 
                         </script>
                     </section>
                     <section data-markdown>
@@ -347,6 +366,9 @@
 
                             `lazyUnit` is a simple example of a <del>contrived</del> _derived_
                             combinator, as opposed to a _primitive_ combinator like `unit`.
+
+                            Note:
+                            We haven't actually defined `unit` anywhere yet - we will get to that later
                         </script>
                     </section>
                     <section data-markdown>
@@ -354,29 +376,44 @@
                             One more decision - should `fork` begin evaluating arguments immediately,
                             or wait until the computation is forced? (e.g. by a call to `get`)?
 
+                            Note:
                             If `fork` is to start computation immediately, it must be doing so
-                            using some globally accessible resource.
+                            using some globally accessible resource (such as a thread pool)
 
                             Alternatively, `fork` can just 'mark' an unevaluated `Par` for concurrent
-                            evaluation.
+                            evaluation, which seems a nicer choice than requiring existence of some
+                            global resource.
 
-                            Note:
                             (there is more to say on this if needed)
                         </script>
                     </section>
                     <section data-markdown>
                         <script type="text/template">
-                            In this model, `Par` becomes more of a _description_ of a parallel
-                            computation, rather than a _container_ that we could just `get` a
-                            value from when required.
+                            `Par` is not a _container_ that we can `get` a value from
 
+                            `Par` is more like a _description_ of a parallel computation
+
+                            Note:
+                            `Par` is now a data structure describing a computation, not just a container
+                            that we can extract values from when required
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
                             To make it clear that a `Par` is basically a program that can be run,
                             let's rename `get`:
+
                             ```scala
                             def run[A](a: Par[A]): A
                             ```
+
                             `Par` is now a pure data structure, and `run` has to have some means of
                             implementing the parallelism...
+
+                            Note:
+                            Our initial API has changed quite a bit, and that's a good thing!
+
+                            We're making progress and learning about deficiencies in our initial design
                         </script>
                     </section>
                 </section>
