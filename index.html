@@ -808,6 +808,61 @@
                 <section>
                     <section data-markdown>
                         <script type="text/template">
+                            ## A brief tour of property-based testing
+
+                            Defining a property:
+
+                            ```scala
+                            val intList = Gen.listOf(Gen.choose(0,100))
+
+                            val prop =
+                                forAll(intList)(ns => ns.reverse.reverse == ns) &&
+                                forAll(intList)(ns => ns.headOption == ns.reverse.lastOption)
+                            ```
+
+                            Checking a property:
+
+                            ```
+                            scala> prop.check
+                            + OK, passed 100 tests.
+                            ```
+
+                            Note:
+                            - Here `intList` is a generator of list of integers
+                            - `forAll` creates a property by combining a generator with a predicate
+                            - In the case of failure, ScalaCheck will also minimise test cases to
+                              the smallest failing case
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## Initial snippets of an API
+
+                            A type for a generator for values of type `A`:
+
+                            ```scala
+                            Gen[A]
+                            ```
+
+                            A function to create a generator for lists of values of type `A`:
+                            ```scala
+                            def listOfN[A](n: Int, a: Gen[A]): Gen[List[A]]
+                            ```
+
+                            A function to create a property:
+
+                            ```scala
+                            def forAll[A](a: Gen[A])(f: A => Boolean): Prop
+                            ```
+
+                            Note:
+                            - We'll need something for a generator of values of type `A`
+                            - As long as `listOf` is told how to generate values to put in the list, it doesn't need to care about the type of elements in the list, so we can make it polymorphic
+                            - `listOfN` is told how long to make the list, this way it stays flexible
+                            - That last line sneaks in the introduction of the `Prop` type as well - more on that later
                         </script>
                     </section>
                 </section>
