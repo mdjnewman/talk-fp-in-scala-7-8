@@ -828,6 +828,7 @@
                             ```
 
                             Note:
+                            - These are examples from `ScalaCheck`
                             - Here `intList` is a generator of list of integers
                             - `forAll` creates a property by combining a generator with a predicate
                             - In the case of failure, ScalaCheck will also minimise test cases to
@@ -837,9 +838,15 @@
                 </section>
 
                 <section>
+                    <section>
+                        <h2>Choosing data types and functions</h2>
+                    </section>
+                </section>
+
+                <section>
                     <section data-markdown>
                         <script type="text/template">
-                            ## Initial snippets of an API
+                            ### Initial snippets of an API
 
                             A type for a generator for values of type `A`:
 
@@ -860,9 +867,107 @@
 
                             Note:
                             - We'll need something for a generator of values of type `A`
-                            - As long as `listOf` is told how to generate values to put in the list, it doesn't need to care about the type of elements in the list, so we can make it polymorphic
+                            - As long as `listOf` is told how to generate values to put
+                              in the list, it doesn't need to care about the type of elements in
+                              the list, so we can make it polymorphic
                             - `listOfN` is told how long to make the list, this way it stays flexible
-                            - That last line sneaks in the introduction of the `Prop` type as well - more on that later
+                            - That last line sneaks in the introduction of the `Prop`
+                              type as well - remember we don't need to know about
+                              the representation of a type to start using it in
+                              this way!
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### API of properties
+
+                            So far our API consists of `forAll`, `&&` and `check`.
+
+                            Simplest respresentation:
+
+                            ```scala
+                            trait Prop { def check: Boolean }
+                            ```
+
+                            Better representation:
+
+                            ```scala
+                            object Prop {
+                                type FailedCase = String
+                                type SuccessCount = Int
+                            }
+
+                            trait Prop { def check: Either[FailedCase,SuccessCount] }
+                            ```
+
+                            Note:
+                            - So we can create, `Prop`s, combine them and `check` them
+                            - ...
+                            - We haven't considered the arguments to `check` yet - let's take a look at generators first
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### API of generators
+
+                            What if we just wrap a state transition and randomly generate values?
+
+                            ```scala
+                            case class Gen[A](sample: State[RNG,A])
+                            ```
+
+                            Note:
+                            - We could just make Gen a type that wraps a State transition over a random number generator:
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            #### Generators that depend on generated values
+
+                            How could we make a `Gen[(String,String)]` where the second string contains only
+                            characters from the first?
+
+
+                            ```scala
+                            def flatMap[B](f: A => Gen[B]): Gen[B]
+                            ```
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### Refining the Prop data type
+
+                            We can't just continue checking a `Prop` indefinitely - we need to be told
+                            when to stop!
+
+                            ```scala
+                            type TestCases = Int
+                            type Result = Option[(FailedCase, SuccessCount)]
+                            case class Prop(run: TestCases => Result)
+                            ```
+
+                            Note:
+                            Here we're using an `Option`/`Maybe` for a result, where `None` is success,
+                            which is a litle confusing. The book goes on to add a more explicit
+                            `Result` type
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            `Prop.run` will also require a `RNG` to sample from the `Gen`, so we'll
+                            add that:
+                            ```scala
+                            case class Prop(run: (TestCases,RNG) => Result)
+                            ```
                         </script>
                     </section>
                 </section>
