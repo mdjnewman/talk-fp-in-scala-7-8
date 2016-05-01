@@ -1063,6 +1063,44 @@
                             ## The laws of generators
                         </script>
                     </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Remember `map` for `Par`?:
+
+                            ```scala
+                            def map[A,B](a: Par[A])(f: A => B): Par[B]
+                            ```
+
+                            Compare this with `map` for `Gen`:
+
+                            ```scala
+                            def map[A,B](a: Gen[A])(f: A => B): Gen[B]
+                            ```
+
+                            The same law even holds!
+
+                            ```scala
+                            map(x)(id) == x
+                            ```
+
+                            Note:
+                            Not only similar signatures, these functions also have similar meanings
+                            in their respective domains
+
+                            In part three of the text, we'll learn the names of these patterns and laws
+                            that govern them.
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## Summary
+
+
+                        </script>
+                    </section>
                 </section>
 
                 <section>
