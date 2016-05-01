@@ -970,6 +970,106 @@
                             ```
                         </script>
                     </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ```scala
+                            def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
+                              (n,rng) => randomStream(as)(rng).zip(Stream.from(0)).take(n).map {
+                                case (a, i) => try {
+                                  if (f(a)) Passed else Falsified(a.toString, i)
+                                } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
+                              }.find(_.isFalsified).getOrElse(Passed)
+                            }
+                            ```
+
+                            Note:
+                            We now know enough to implement `forAll`.
+
+                            We catch exceptions so that we can report which input caused them.
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## Sized generation
+
+                            Note:
+                            It would be best if our framework finds the simplest failing test case to make analysis easier.
+
+                            ScalaCheck does this via shrinking - we're going to do it via sized generation.
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ### A type for sized generation
+
+                            ```scala
+                            case class SGen[+A](forSize: Int => Gen[A])
+                            ```
+
+                            Note:
+                            - This keeps our existing `Gen` type untouched
+                            - A `Gen` can be trivially converted into an `SGen` by ignoring the size requirement
+                            - Many operations on `SGen` can just delegate to `Gen`
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ```scala
+                            scala> import fpinscala.testing._
+                            import fpinscala.testing._
+
+                            scala> val sgen = SGen(n => Gen.choose(0,10).listOfN(n))
+                            sgen: fpinscala.testing.SGen[List[Int]] = SGen(<function1>)
+
+                            scala> val genlistof1 = sgen(1)
+                            genlistof1: fpinscala.testing.Gen[List[Int]]
+                                    = Gen(State(<function1>))
+
+                            scala> genlistof1.sample.run(fpinscala.state.RNG.Simple(11))
+                            res8: (List[Int], fpinscala.state.RNG)
+                                    = (List(7),Simple(277363943098))
+                            ```
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ```scala
+                            def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
+                              forAll(n => g(n))(f)
+
+                            def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+                              (max,n,rng) =>
+                                val casesPerSize = (n - 1) / max + 1
+                                val props: Stream[Prop] =
+                                  Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
+                                val prop: Prop =
+                                  props.map(p => Prop { (max, _, rng) =>
+                                    p.run(max, casesPerSize, rng)
+                                  }).toList.reduce(_ && _)
+                                prop.run(max,n,rng)
+                            }
+                            ```
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## Writing a test suite for parallel computations
+                        </script>
+                    </section>
+                </section>
+
+                <section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ## The laws of generators
+                        </script>
+                    </section>
                 </section>
 
                 <section>
