@@ -821,9 +821,20 @@
                             ```
 
                             Note:
-                            - These are examples from `ScalaCheck`
+                            Is everyone here familiar with the concept of property based testing?
+
+                            The idea of property based testing is to decouple the specification of program
+                            behavior from the creation of test cases. The programmer focuses on specifying
+                            the behavior of programs and giving high-level constraints on the test
+                            cases.
+
+                            - These are examples from `ScalaCheck`, where we're checking the `reverse`
+                              function on a `List` data type
                             - Here `intList` is a generator of list of integers
                             - `forAll` creates a property by combining a generator with a predicate
+                            - A property is a specification of the program, or an invariant
+                            - In this case, our property is specifying that for every list generated
+                              by `intList`, reversing that list twice should yield the initial list
                             - In the case of failure, ScalaCheck will also minimise test cases to
                               the smallest failing case
                         </script>
@@ -859,15 +870,21 @@
                             ```
 
                             Note:
-                            - We'll need something for a generator of values of type `A`
-                            - As long as `listOf` is told how to generate values to put
+                            What we have here is a rough draft of our API - it's not complete, and as we've
+                            seen in the previous chapter it will change as we work toward our final solution
+
+                            - We'll need a type for a generator of values of type `A` - we make this
+                              generic, so that we don't need a separate generator type for every time we
+                              are testing code with different input types
+
+                            - As long as `listOfN` is told how to generate values to put
                               in the list, it doesn't need to care about the type of elements in
                               the list, so we can make it polymorphic
-                            - `listOfN` is told how long to make the list, this way it stays flexible
+
+                            - We then have `forAll`, which given a generator and a predicate returns
+                              a Property, as in the ScalaCheck example
                             - That last line sneaks in the introduction of the `Prop`
-                              type as well - remember we don't need to know about
-                              the representation of a type to start using it in
-                              this way!
+                              type as well
                         </script>
                     </section>
                 </section>
@@ -897,8 +914,9 @@
                             ```
 
                             Note:
-                            - So we can create, `Prop`s, combine them and `check` them
-                            - ...
+                            - So we can create `Prop`s, combine them and `check` them
+                            - It's okay for `FailedCase` to be a string, as all we're doing with it is printing it out
+                              for the user
                             - We haven't considered the arguments to `check` yet - let's take a look at generators first
                         </script>
                     </section>
@@ -916,21 +934,46 @@
                             ```
 
                             Note:
-                            - We could just make Gen a type that wraps a State transition over a random number generator:
+                            At this stage, all we want to do is randomly generate values, so we could just
+                            make `Gen` a type that wraps a State transition over a random number generator,
+                            which gets us a long way toward our desired behaviour.
                         </script>
                     </section>
-                    <section data-markdown>
-                        <script type="text/template">
+                    <section>
+                        <div data-markdown>
+                            <script type="text/template">
                             #### Generators that depend on generated values
 
                             How could we make a `Gen[(String,String)]` where the second string contains only
                             characters from the first?
-
+                            </script>
+                        </div>
+                        <div class="fragment fade-up" data-markdown>
+                            <script type="text/template">
+                            Remember `chooser`?
 
                             ```scala
-                            def flatMap[B](f: A => Gen[B]): Gen[B]
+                            def chooser[A,B](pa: Par[A])(choices: A => Par[B]): Par[B]
                             ```
-                        </script>
+                            </script>
+                        </div>
+                        <div class="fragment fade-up" data-markdown>
+                            <script type="text/template">
+                            ```scala
+                            def flatMap[A,B](ga: Gen[A])(   f   : A => Gen[B]): Gen[B]
+                            ```
+                            </script>
+                        </div>
+ 
+                        <aside class="notes" data-markdown>
+                            <script type="text/template">
+                            This is a similar problem to one we've see before, when we wanted to choose
+                            a parallel computation to run based on the result of an earlier computation.
+
+                            We can already express some more complicated generators using combinators
+                            we're familiar with.
+                            </script>
+                        </aside>
                     </section>
                 </section>
 
@@ -949,8 +992,15 @@
                             ```
 
                             Note:
+                            Taking a look at properties again ...
+
+                            With what we've written so far, there is no way for the framework to know
+                            when to stop generating inputs and evaluating the predicate - rather than
+                            making an assumption of always running, say, 10 test cases, we can make
+                            this explicit in the API and leave it up to the programmer.
+
                             Here we're using an `Option`/`Maybe` for a result, where `None` is success,
-                            which is a litle confusing. The book goes on to add a more explicit
+                            which is a little confusing. The book goes on to add a more explicit
                             `Result` type
                         </script>
                     </section>
@@ -961,6 +1011,16 @@
                             ```scala
                             case class Prop(run: (TestCases,RNG) => Result)
                             ```
+
+                            Note:
+                            So we've given `Prop` a limit on the number of test cases to run ...
+
+                            What else does `Prop` require to generate values and test them?
+
+                            ...
+
+
+                            So our `run` function now takes two arguments.
                         </script>
                     </section>
                     <section data-markdown>
@@ -976,7 +1036,8 @@
                             ```
 
                             Note:
-                            We now know enough to implement `forAll`.
+                            We now know enough to implement `forAll`, which, as we've seen, is
+                            how we build properties given a generator and a predicate
 
                             We catch exceptions so that we can report which input caused them.
                         </script>
@@ -992,6 +1053,12 @@
                             It would be best if our framework finds the simplest failing test case to make analysis easier.
 
                             ScalaCheck does this via shrinking - we're going to do it via sized generation.
+
+                            This means we will generate inputs of a small size first, and increase once the predicate
+                            has been checked for multiple cases of the small size.
+
+                            For lists, the size is probably the length of the list. For a tree, it might be the height,
+                            or the number of nodes.
                         </script>
                     </section>
                     <section data-markdown>
@@ -1031,6 +1098,28 @@
                         <script type="text/template">
                             ```scala
                             def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
+                                    sys.error("Nope!")
+                            ```
+
+                            `forAll` now needs to change as well, as `SGen` needs to be told a size.
+
+                            <div class="fragment fade-up">
+                            Our new `Prop`:
+
+                            ```scala
+                            case class Prop(run: (MaxSize,TestCases,RNG) => Result)
+                            ```
+                            <div>
+
+                            Note:
+                            As we want the property to be responsible for invoking generators,
+                            we can add a _maximum_ size to the `Prop`.
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            ```scala
+                            def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
                               forAll(n => g(n))(f)
 
                             def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
@@ -1045,6 +1134,11 @@
                                 prop.run(max,n,rng)
                             }
                             ```
+
+                            Note:
+                            - Generate `casesPerSize` random inputs
+                            - Make one property per size, but no more than `n`
+                            - And finally, we combine them all into one property
                         </script>
                     </section>
                 </section>
@@ -1098,6 +1192,18 @@
                         <script type="text/template">
                             ## Summary
 
+                            - We've learnt more about functional design by creating a
+                              library for property based testing
+                            - Oscillating between the abstract algebra and the concrete
+                              representation lets the two inform each other
+                            - We needed many of the same combinators! (`map`, `flatMap` etc)
+
+                            > There are a great many seemingly distinct problems being solved in the world of
+                            > software, yet the space of functional solutions is much smaller.
+
+                            Note:
+                            - Iterating in this was means we avoid overfitting the library to a
+                              particular representation, but keeps us grounded
 
                         </script>
                     </section>
