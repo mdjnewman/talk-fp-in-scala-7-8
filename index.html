@@ -832,10 +832,11 @@
                               function on a `List` data type
                             - Here `intList` is a generator of list of integers
                             - `forAll` creates a property by combining a generator with a predicate
-                            - A property is a specification of the program, or an invariant
                             - In this case, our property is specifying that for every list generated
                               by `intList`, reversing that list twice should yield the initial list
-                            - In the case of failure, ScalaCheck will also minimise test cases to
+                            - A property is a specification of the program, or an invariant
+                            - We can then check our property, using its `check` method. In the case
+                              of failure, ScalaCheck will also minimise test cases to
                               the smallest failing case
                         </script>
                     </section>
@@ -883,8 +884,8 @@
 
                             - We then have `forAll`, which given a generator and a predicate returns
                               a Property, as in the ScalaCheck example
-                            - That last line sneaks in the introduction of the `Prop`
-                              type as well
+
+                            - What do we want to do with properties, as per the ScalaCheck example?
                         </script>
                     </section>
                 </section>
@@ -915,6 +916,7 @@
 
                             Note:
                             - So we can create `Prop`s, combine them and `check` them
+                            - Loosing information around what caused the failure and how many successes we had
                             - It's okay for `FailedCase` to be a string, as all we're doing with it is printing it out
                               for the user
                             - We haven't considered the arguments to `check` yet - let's take a look at generators first
@@ -999,9 +1001,17 @@
                             making an assumption of always running, say, 10 test cases, we can make
                             this explicit in the API and leave it up to the programmer.
 
-                            Here we're using an `Option`/`Maybe` for a result, where `None` is success,
+                            We can always add helper methods with sensible defaults later, but we'll
+                            need to update our `Prop` type to support this.
+
+                            As we are now telling the `Prop` how many cases to run, there is no point
+                            having `run` return a success count if the property passes (as they will
+                            be equal for a passing property), so we we can go
+                            from a `Either` to an `Option`.
+
+                            We're using an `Option` for a result, where `None` is success,
                             which is a little confusing. The book goes on to add a more explicit
-                            `Result` type
+                            `Result` type with a clearer meaning.
                         </script>
                     </section>
                     <section data-markdown>
@@ -1038,6 +1048,9 @@
                             Note:
                             We now know enough to implement `forAll`, which, as we've seen, is
                             how we build properties given a generator and a predicate
+
+                            Remember that streams are lazily evaluated, so we won't check every
+                            input if the first one fails.
 
                             We catch exceptions so that we can report which input caused them.
                         </script>
@@ -1119,10 +1132,7 @@
                     <section data-markdown>
                         <script type="text/template">
                             ```scala
-                            def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
-                              forAll(n => g(n))(f)
-
-                            def forAll[A](g: Int => Gen[A])(f: A => Boolean): Prop = Prop {
+                            def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
                               (max,n,rng) =>
                                 val casesPerSize = (n - 1) / max + 1
                                 val props: Stream[Prop] =
@@ -1136,6 +1146,9 @@
                             ```
 
                             Note:
+                            With this new representation for `Prop`, we can reimplement `forAll`
+                            with a simple algorithm:
+
                             - Generate `casesPerSize` random inputs
                             - Make one property per size, but no more than `n`
                             - And finally, we combine them all into one property
