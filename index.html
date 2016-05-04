@@ -872,7 +872,9 @@
 
                             Note:
                             What we have here is a rough draft of our API - it's not complete, and as we've
-                            seen in the previous chapter it will change as we work toward our final solution
+                            seen in the previous chapter it will change as we work toward our final solution.
+
+                            We'll start by reading off some types and functions from the ScalaCheck example
 
                             - We'll need a type for a generator of values of type `A` - we make this
                               generic, so that we don't need a separate generator type for every time we
@@ -885,7 +887,7 @@
                             - We then have `forAll`, which given a generator and a predicate returns
                               a Property, as in the ScalaCheck example
 
-                            - What do we want to do with properties, as per the ScalaCheck example?
+                            - What do we want to do with properties?
                         </script>
                     </section>
                 </section>
@@ -974,6 +976,9 @@
 
                             We can already express some more complicated generators using combinators
                             we're familiar with.
+
+                            This symmetry between chooser and flatMap is no coincidence, but we will
+                            see that in more detail later in the book.
                             </script>
                         </aside>
                     </section>
@@ -1094,14 +1099,14 @@
                             scala> import fpinscala.testing._
                             import fpinscala.testing._
 
-                            scala> val sgen = SGen(n => Gen.choose(0,10).listOfN(n))
-                            sgen: fpinscala.testing.SGen[List[Int]] = SGen(<function1>)
+                            scala> val listSGen = SGen(n => Gen.choose(0,10).listOfN(n))
+                            listSGen: fpinscala.testing.SGen[List[Int]] = SGen(<function1>)
 
-                            scala> val genlistof1 = sgen(1)
-                            genlistof1: fpinscala.testing.Gen[List[Int]]
+                            scala> val listOf1Gen = listSGen(1)
+                            listOf1Gen: fpinscala.testing.Gen[List[Int]]
                                     = Gen(State(<function1>))
 
-                            scala> genlistof1.sample.run(fpinscala.state.RNG.Simple(11))
+                            scala> listOf1Gen.sample.run(fpinscala.state.RNG.Simple(11))
                             res8: (List[Int], fpinscala.state.RNG)
                                     = (List(7),Simple(277363943098))
                             ```
