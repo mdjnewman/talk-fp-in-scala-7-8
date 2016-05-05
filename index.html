@@ -968,7 +968,7 @@
                             ```
                             </script>
                         </div>
- 
+
                         <aside class="notes" data-markdown>
                             <script type="text/template">
                             This is a similar problem to one we've see before, when we wanted to choose
@@ -1068,9 +1068,15 @@
                             ## Sized generation
 
                             Note:
-                            It would be best if our framework finds the simplest failing test case to make analysis easier.
+                            When we're randomly generating test cases, it might happen that we generate some
+                            ridiculously complicated input as our first example and our property is falsified,
+                            leaving us with a difficult debugging task.
 
-                            ScalaCheck does this via shrinking - we're going to do it via sized generation.
+                            Earlier, I mentioned briefly that ScalaCheck solves this problem by using test
+                            case minimisation - ScalaCheck will iteratively find the smallest test case that
+                            fails.
+
+                            We're going to use sized generation to get a similar outcome.
 
                             This means we will generate inputs of a small size first, and increase once the predicate
                             has been checked for multiple cases of the small size.
@@ -1099,17 +1105,21 @@
                             scala> import fpinscala.testing._
                             import fpinscala.testing._
 
-                            scala> val listSGen = SGen(n => Gen.choose(0,10).listOfN(n))
-                            listSGen: fpinscala.testing.SGen[List[Int]] = SGen(<function1>)
+                            scala> val sgen = SGen(n => Gen.choose(0,10).listOfN(n))
+                            sgen: fpinscala.testing.SGen[List[Int]] = SGen(<function1>)
 
-                            scala> val listOf1Gen = listSGen(1)
-                            listOf1Gen: fpinscala.testing.Gen[List[Int]]
+                            scala> val gen = sgen(1)
+                            gen: fpinscala.testing.Gen[List[Int]]
                                     = Gen(State(<function1>))
 
-                            scala> listOf1Gen.sample.run(fpinscala.state.RNG.Simple(11))
+                            scala> gen.sample.run(fpinscala.state.RNG.Simple(11))
                             res8: (List[Int], fpinscala.state.RNG)
                                     = (List(7),Simple(277363943098))
                             ```
+
+                            Note:
+                            To see what it looks like using a sized generator, we can manually sample
+                            values from it on the Scala console.
                         </script>
                     </section>
                     <section data-markdown>
@@ -1130,8 +1140,12 @@
                             <div>
 
                             Note:
-                            As we want the property to be responsible for invoking generators,
-                            we can add a _maximum_ size to the `Prop`.
+                            ...
+
+                            Currently our property is responsible for invoking the generator, so we
+                            can keep using this pattern by adding a maximum size to the `Prop`.
+
+                            This puts the size under the control of the user of our library.
                         </script>
                     </section>
                     <section data-markdown>
@@ -1165,6 +1179,11 @@
                     <section data-markdown>
                         <script type="text/template">
                             ## Writing a test suite for parallel computations
+                        </script>
+                    </section>
+                    <section data-markdown>
+                        <script type="text/template">
+                            Homework time!
                         </script>
                     </section>
                 </section>
