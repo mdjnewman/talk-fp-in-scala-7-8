@@ -559,9 +559,6 @@
                                   def call = a(es).get
                                 })
 
-                              def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
-                                p(e).get == p2(e).get
-
                               // ...
                             ```
 
@@ -639,7 +636,7 @@
 
                             Laws like these are very handy when reasoning about your code
                             and when testing it using property based testing, as we will see
-                            in the enxt chapter.
+                            in the next chapter.
 
                             Mention parametricity?
                         </script>
@@ -780,13 +777,11 @@
                               challenges and solutions
                             - Explored what it means for an API to form an _algebra_
 
-                            Further reading:
+                            Further reading if you're interested in this domain:
 
-                            - [Functional Programming in Scala](https://www.manning.com/books/functional-programming-in-scala),
-                              of course!
                             - [Parallel and Concurrent Programming in Haskell
                               ](http://chimera.labs.oreilly.com/books/1230000000929/index.html),
-                              if you're interested in this domain specifically (it's free online)
+                              (it's free online)
 
                             Note:
                             i.e. we've defined a collection of data types and functions and
@@ -939,6 +934,12 @@
 
                             ```scala
                             case class Gen[A](sample: State[RNG,A])
+                            ```
+
+                            We've seen `State` in earlier chapters, but here's the definition again:
+
+                            ```scala
+                            case class State[S,A](run: S => (A,S))
                             ```
 
                             Note:
