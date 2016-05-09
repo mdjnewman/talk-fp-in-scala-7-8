@@ -1038,15 +1038,14 @@
                         </script>
                     </section>
                     <section>
-                        <pre class="highlight scala"><code data-trim data-noescape>
-def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
-  (n,rng) => randomStream(as)(rng).zip(Stream.from(0)).take(n).map {
-    case (a, i) => try {
-      if (f(a)) Passed else Falsified(a.toString, i)
-    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
-  }.find(_.isFalsified).getOrElse(Passed)
-}
-                        </code></pre>
+                        <pre class="highlight scala">
+<span>def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {</span>
+<span class="fragment" data-fragment-index=0>  (n,rng) => randomStream(as)(rng)</span><span class="fragment" data-fragment-index=1>.zip(Stream.from(0)).take(n)</span><span class="fragment" data-fragment-index=2>.map {</span>
+<span class="fragment" data-fragment-index=3>    case (a, i) => try {</span>
+<span class="fragment" data-fragment-index=3>      if (f(a)) Passed else Falsified(a.toString, i)</span>
+<span class="fragment" data-fragment-index=3>    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }</span>
+<span class="fragment" data-fragment-index=2>  }</span><span class="fragment" data-fragment-index=4>.find(_.isFalsified).getOrElse(Passed)</span>
+<span>}</span></pre>
                         <aside class="notes" data-markdown>
                             <script type="text/template">
                             We now know enough to implement `forAll`, which, as we've seen, is
@@ -1130,7 +1129,7 @@ def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
                         <script type="text/template">
                             ```scala
                             def forAll[A](g: SGen[A])(f: A => Boolean): Prop =
-                                    sys.error("Nope!")
+                              sys.error("Nope!")
                             ```
 
                             `forAll` now needs to change as well, as `SGen` needs to be told a size.
@@ -1285,11 +1284,11 @@ def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
                     { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
                     { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
                     { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
-//                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() {
-//                        [].forEach.call( document.querySelectorAll( '.highlight' ), function( v, i) {
-//                            hljs.highlightBlock(v);
-//                        });
-//                    } },
+                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() {
+                        [].forEach.call( document.querySelectorAll( '.highlight' ), function( v, i) {
+                            hljs.highlightBlock(v);
+                        });
+                    } },
                     { src: 'plugin/zoom-js/zoom.js', async: true },
                     { src: 'plugin/notes/notes.js', async: true }
                 ]
