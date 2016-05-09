@@ -1039,13 +1039,13 @@
                     </section>
                     <section>
                         <pre class="highlight scala">
-<span>def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {</span>
+def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
 <span class="fragment" data-fragment-index=0>  (n,rng) => randomStream(as)(rng)</span><span class="fragment" data-fragment-index=1>.zip(Stream.from(0)).take(n)</span><span class="fragment" data-fragment-index=2>.map {</span>
 <span class="fragment" data-fragment-index=3>    case (a, i) =></span><span class="fragment" data-fragment-index=5> try {</span>
 <span class="fragment" data-fragment-index=3>      if (f(a)) Passed else Falsified(a.toString, i)</span>
 <span class="fragment" data-fragment-index=5>    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }</span>
 <span class="fragment" data-fragment-index=2>  }</span><span class="fragment" data-fragment-index=4>.find(_.isFalsified).getOrElse(Passed)</span>
-<span>}</span></pre>
+}</pre>
                         <aside class="notes" data-markdown>
                             <script type="text/template">
                             We now know enough to implement `forAll`, which, as we've seen, is
@@ -1151,30 +1151,29 @@
                             This puts the size under the control of the user of our library.
                         </script>
                     </section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            ```scala
-                            def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
-                              (max,n,rng) =>
-                                val casesPerSize = (n - 1) / max + 1
-                                val props: Stream[Prop] =
-                                  Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
-                                val prop: Prop =
-                                  props.map(p => Prop { (max, _, rng) =>
-                                    p.run(max, casesPerSize, rng)
-                                  }).toList.reduce(_ && _)
-                                prop.run(max,n,rng)
-                            }
-                            ```
-
-                            Note:
+                    <section>
+                        <pre class="highlight scala">
+def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
+  (max,n,rng) =>
+    val casesPerSize = (n - 1) / max + 1
+    val props: Stream[Prop] =
+      Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
+    val prop: Prop =
+      props.map(p => Prop { (max, _, rng) =>
+        p.run(max, casesPerSize, rng)
+      }).toList.reduce(_ && _)
+    prop.run(max,n,rng)
+}</pre>
+                        <aside class="notes" data-markdown>
+                            <script type="text/template">
                             With this new representation for `Prop`, we can reimplement `forAll`
                             with a simple algorithm:
 
                             - Generate `casesPerSize` random inputs
                             - Make one property per size, but no more than `n`
                             - And finally, we combine them all into one property
-                        </script>
+                            </script>
+                        </aside>
                     </section>
                 </section>
 
