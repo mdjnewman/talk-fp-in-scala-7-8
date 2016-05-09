@@ -1041,9 +1041,9 @@
                         <pre class="highlight scala">
 <span>def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {</span>
 <span class="fragment" data-fragment-index=0>  (n,rng) => randomStream(as)(rng)</span><span class="fragment" data-fragment-index=1>.zip(Stream.from(0)).take(n)</span><span class="fragment" data-fragment-index=2>.map {</span>
-<span class="fragment" data-fragment-index=3>    case (a, i) => try {</span>
+<span class="fragment" data-fragment-index=3>    case (a, i) =></span><span class="fragment" data-fragment-index=5> try {</span>
 <span class="fragment" data-fragment-index=3>      if (f(a)) Passed else Falsified(a.toString, i)</span>
-<span class="fragment" data-fragment-index=3>    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }</span>
+<span class="fragment" data-fragment-index=5>    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }</span>
 <span class="fragment" data-fragment-index=2>  }</span><span class="fragment" data-fragment-index=4>.find(_.isFalsified).getOrElse(Passed)</span>
 <span>}</span></pre>
                         <aside class="notes" data-markdown>
