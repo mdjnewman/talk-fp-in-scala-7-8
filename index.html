@@ -443,10 +443,10 @@
                             // Combine the results of two parallel computations
                             def map2[A,B,C](a: Par[A], b: Par[B])(f: (A,B) => C): Par[C]
 
-                            // Mark a computation to be executed for concurrent evaluation
+                            // Mark a computation to be executed concurrently
                             def fork[A](a: => Par[A]): Par[A]
 
-                            // Fully evaluate a given Par, spawing parallel computations
+                            // Fully evaluate a given Par, spawning parallel computations
                             // as requested by fork
                             def run[A](a: Par[A]): A
                             ```
@@ -684,20 +684,12 @@
                 </section>
 
                 <section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            ## Fully non-blocking implementation using Actors
-                        </script>
-                    </section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            Homework time!
-
-                            Note:
+                    <h2>Fully non-blocking implementation using Actors</h2>
+                    <p class="fragment fade-up">Homework time!</p>
+                    <aside class="notes">
                             This is a really good example and shows how you can use side effects as
                             an implementation detail and still have a purely functional API.
-                        </script>
-                    </section>
+                    </aside>
                 </section>
 
                 <section>
@@ -706,6 +698,8 @@
                             ## Refining combinators to their most general form
 
                             Note:
+                            Before we finish up, I want to talk about ...
+
                             Functional design is an iterative process, when using an API
                             you might find some new combinator that you need.
 
@@ -1074,8 +1068,13 @@
 
                             Note:
                             When we're randomly generating test cases, it might happen that we generate some
-                            ridiculously complicated input as our first example and our property is falsified,
+                            ridiculously complicated input as our first example and if falsifies our property,
                             leaving us with a difficult debugging task.
+
+                            For example, say you have some function over lists. If your program is broken
+                            for all lists, then it would be better that you run a test case for a list with
+                            a single element in it first, rather than having a 1000 element long list
+                            splattered on the console.
 
                             Earlier, I mentioned briefly that ScalaCheck solves this problem by using test
                             case minimisation - ScalaCheck will iteratively find the smallest test case that
@@ -1181,16 +1180,8 @@
                 </section>
 
                 <section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            ## Writing a test suite for parallel computations
-                        </script>
-                    </section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            Homework time!
-                        </script>
-                    </section>
+                    <h2>Writing a test suite for parallel computations</h2>
+                    <p class="fragment fade-up">Homework time!</p>
                 </section>
 
                 <section>
