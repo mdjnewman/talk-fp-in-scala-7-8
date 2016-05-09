@@ -1037,19 +1037,18 @@
                             So our `run` function now takes two arguments.
                         </script>
                     </section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            ```scala
-                            def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
-                              (n,rng) => randomStream(as)(rng).zip(Stream.from(0)).take(n).map {
-                                case (a, i) => try {
-                                  if (f(a)) Passed else Falsified(a.toString, i)
-                                } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
-                              }.find(_.isFalsified).getOrElse(Passed)
-                            }
-                            ```
-
-                            Note:
+                    <section>
+                        <pre class="highlight scala"><code data-trim data-noescape>
+def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
+  (n,rng) => randomStream(as)(rng).zip(Stream.from(0)).take(n).map {
+    case (a, i) => try {
+      if (f(a)) Passed else Falsified(a.toString, i)
+    } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
+  }.find(_.isFalsified).getOrElse(Passed)
+}
+                        </code></pre>
+                        <aside class="notes" data-markdown>
+                            <script type="text/template">
                             We now know enough to implement `forAll`, which, as we've seen, is
                             how we build properties given a generator and a predicate
 
@@ -1057,7 +1056,8 @@
                             input if the first one fails.
 
                             We catch exceptions so that we can report which input caused them.
-                        </script>
+                            </script>
+                        </aside>
                     </section>
                 </section>
 
@@ -1285,6 +1285,11 @@
                     { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
                     { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
                     { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+//                    { src: 'plugin/highlight/highlight.js', async: true, callback: function() {
+//                        [].forEach.call( document.querySelectorAll( '.highlight' ), function( v, i) {
+//                            hljs.highlightBlock(v);
+//                        });
+//                    } },
                     { src: 'plugin/zoom-js/zoom.js', async: true },
                     { src: 'plugin/notes/notes.js', async: true }
                 ]
