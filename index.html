@@ -377,23 +377,15 @@
                             combinator, as opposed to a _primitive_ combinator like `unit`.
 
                             Note:
+                            Previously, `unit` accepted its argument lazily, but now that we have `fork`,
+                            `unit` can accept its argument strictly and we can use a derived combinator
+                            `lazyUnit` for cases when we don't want to fully evaluate `a` on the current
+                            thread.
+
+                            This new combinator `lazyUnit` is called a derived combinator, as it is
+                            simply implemented in terms of other combinators.
+
                             We haven't actually defined `unit` anywhere yet - we will get to that later
-                        </script>
-                    </section>
-                    <section data-markdown>
-                        <script type="text/template">
-                            One more decision - should `fork` begin evaluating arguments immediately,
-                            or wait until the computation is forced? (e.g. by a call to `get`)?
-
-                            Note:
-                            If `fork` is to start computation immediately, it must be doing so
-                            using some globally accessible resource (such as a thread pool)
-
-                            Alternatively, `fork` can just 'mark' an unevaluated `Par` for concurrent
-                            evaluation, which seems a nicer choice than requiring existence of some
-                            global resource.
-
-                            (there is more to say on this if needed)
                         </script>
                     </section>
                     <section data-markdown>
@@ -403,6 +395,13 @@
                             `Par` is more like a _description_ of a parallel computation
 
                             Note:
+                            Just like we decided that `unit` should not have any side effects, it doesn't
+                            seem like a good idea to have `fork` evaluating values on a seperate
+                            thread as soon as it's called.
+
+                            What we do instead is to think of `fork` as just 'marking' an unevaluated
+                            `Par` for concurrent evaluation.
+
                             `Par` is now a data structure describing a computation, not just a container
                             that we can extract values from when required
                         </script>
@@ -420,9 +419,17 @@
                             implementing the parallelism...
 
                             Note:
+                            To make it clear that a `Par` is describing a computation that can be run,
+                            we'll rename `get` to something more meaningful.
+
                             Our initial API has changed quite a bit, and that's a good thing!
 
-                            We're making progress and learning about deficiencies in our initial design
+                            We're making progress and learning about deficiencies in our initial design.
+
+                            ... (pause) ...
+
+                            Now, we need to give `run` some means of implementing parallelism, but before
+                            that we need to work out how to represent a `Par`.
                         </script>
                     </section>
                 </section>
@@ -450,10 +457,6 @@
                             // as requested by fork
                             def run[A](a: Par[A]): A
                             ```
-
-                            Note:
-                            So far we've just been assuming that `run` has some way of implementing
-                            parallelism. Let's dig into that a bit more...
                         </script>
                     </section>
                     <section data-markdown>
@@ -477,6 +480,8 @@
                             ```
 
                             Note:
+                            Could `run` use a Java `ExecutorService` to implement parallelism?
+
                             This is the Java API transcribed to Scala.
                         </script>
                     </section>
