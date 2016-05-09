@@ -1155,23 +1155,33 @@ def forAll[A](as: Gen[A])(f: A => Boolean): Prop = Prop {
                         <pre class="highlight scala">
 def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
   (max,n,rng) =>
-    val casesPerSize = (n - 1) / max + 1
-    val props: Stream[Prop] =
-      Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))
-    val prop: Prop =
-      props.map(p => Prop { (max, _, rng) =>
-        p.run(max, casesPerSize, rng)
-      }).toList.reduce(_ && _)
-    prop.run(max,n,rng)
+<span class="fragment" data-fragment-index=1>    val casesPerSize = (n - 1) / max + 1</span>
+<span class="fragment" data-fragment-index=2>    val props: Stream[Prop] =</span>
+<span class="fragment" data-fragment-index=2>      Stream.from(0).take((n min max) + 1).map(i => forAll(g(i))(f))</span>
+<span class="fragment" data-fragment-index=3>    val prop: Prop =</span>
+<span class="fragment" data-fragment-index=3>      props.map(p => Prop { (max, _, rng) =></span>
+<span class="fragment" data-fragment-index=3>        p.run(max, casesPerSize, rng)</span>
+<span class="fragment" data-fragment-index=3>      }).toList.reduce(_ && _)</span>
+<span class="fragment" data-fragment-index=4>    prop.run(max,n,rng)</span>
 }</pre>
                         <aside class="notes" data-markdown>
                             <script type="text/template">
                             With this new representation for `Prop`, we can reimplement `forAll`
                             with a simple algorithm:
 
-                            - Generate `casesPerSize` random inputs
-                            - Make one property per size, but no more than `n`
-                            - And finally, we combine them all into one property
+                            - First, we work out how many test cases we need to run for each size. If
+                            `n = 100`, and `maxSize = 10`, then we'll run 10 cases for each size.
+
+                            - Next, we make a stream of properties - one for each size, but no more
+                            than `n`
+
+                            - Now we have a stream of properties, which we can combine using our `and`
+                            operator
+
+                            - Finally, we run this new `Prop` and return the result
+
+                            This is a simple implementation, and is just one possible algorithm we could
+                            use.
                             </script>
                         </aside>
                     </section>
@@ -1180,6 +1190,16 @@ def forAll[A](g: SGen[A])(f: A => Boolean): Prop = Prop {
                 <section>
                     <h2>Writing a test suite for parallel computations</h2>
                     <p class="fragment fade-up">Homework time!</p>
+                    <aside class="notes" data-markdown>
+                        <script type="text/template">
+                        The book has a section on using property based testing to validate the
+                        laws we covered in the previous chapter.
+
+                        I definitely recommend working through the
+                        exercises in this section, so that you see how to use our property based
+                        testing library in a non-trivial domain.
+                        </script>
+                    </aside>
                 </section>
 
                 <section>
